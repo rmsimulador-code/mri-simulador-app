@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced MRI Simulator</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+  background: #1a4a8a; min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.bg-pattern {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 50% 40%, rgba(100,160,255,0.18) 0%, transparent 60%),
+    repeating-linear-gradient(45deg, transparent, transparent 38px, rgba(255,255,255,0.03) 38px, rgba(255,255,255,0.03) 40px);
+  pointer-events: none; z-index: 0;
+}
+.page-title {
+  font-size: 30px; font-weight: 900; color: #a8c8ff; letter-spacing: 5px;
+  text-transform: uppercase; text-shadow: 0 2px 24px rgba(0,80,200,0.5);
+  margin-bottom: 24px; position: relative; z-index: 1; user-select: none;
+}
+#modal-new-exam {
+  display: none; position: fixed; inset: 0; z-index: 999999;
+  background: rgba(0,0,0,0.55); align-items: center; justify-content: center;
+}
+#modal-new-exam.open { display: flex; }
+.ne-modal-box {
+  background: #c8d4e8; border: 2px solid #4a7acc;
+  width: 740px; max-width: 97vw;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+}
+.ne-titlebar {
+  background: linear-gradient(to bottom, #2a5aaa, #1a3a7a);
+  color: #fff; padding: 7px 14px; font-size: 14px; font-weight: 700;
+  letter-spacing: 0.5px; border-bottom: 2px solid #4a7acc;
+}
+.ne-body { display: grid; grid-template-columns: 1fr 1fr; background: #c8d4e8; }
+.ne-col { padding: 14px 16px; }
+.ne-col-left { border-right: 1px solid #a0b0cc; }
+.ne-section-title {
+  font-size: 12px; font-weight: 700; color: #1a3a6e;
+  margin-bottom: 10px; border-bottom: 1px solid #a0b0cc; padding-bottom: 4px;
+}
+.ne-grid { display: grid; grid-template-columns: 116px 1fr; align-items: center; gap: 6px 8px; font-size: 12px; color: #111; }
+.ne-label { font-size: 12px; color: #222; }
+.ne-input {
+  height: 22px; border: 1px solid #7a9acc; padding: 0 6px;
+  background: #e8f0ff; font-size: 12px; width: 100%;
+  font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+}
+.ne-input:focus { outline: 1px solid #2a5aaa; }
+.ne-row-inline { display: flex; gap: 6px; align-items: center; }
+.ne-toggle {
+  height: 22px; padding: 0 10px; font-size: 11px; font-weight: 700;
+  border: 1px solid #7a9acc; background: #d0ddf0; cursor: pointer;
+  font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif; color: #222;
+}
+.ne-toggle.active-ne { background: #2a5aaa; color: #fff; }
+.ne-conditions-title { font-size: 11px; font-weight: 700; color: #555; margin: 14px 0 6px; }
+.ne-footer {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 10px 16px; border-top: 1px solid #a0b0cc; background: #b8c8e0;
+}
+.ne-btn {
+  height: 26px; padding: 0 24px; font-size: 13px; font-weight: 700;
+  border: 1px solid #7a9acc; cursor: pointer;
+  font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+}
+.ne-btn-ok { background: #2a5aaa; color: #fff; }
+.ne-btn-ok:hover { background: #1e4a90; }
+.ne-btn-cancel { background: #d0ddf0; color: #222; }
+.ne-btn-cancel:hover { background: #bfcce0; }
+.ne-date-btns { display: flex; gap: 4px; align-items: center; }
+.ne-date-btn {
+  height: 22px; padding: 0 8px; font-size: 11px; font-weight: 700;
+  border: 1px solid #7a9acc; background: #d0ddf0; cursor: pointer;
+  font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif; color: #222;
+}
+.ne-date-btn.active-ne { background: #2a5aaa; color: #fff; }
+.hub-box {
+  background: #c8d4e8; border: 2px solid #4a7acc;
+  width: 500px; max-width: 97vw;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+  position: relative; z-index: 1;
+}
+.hub-titlebar {
+  background: linear-gradient(to bottom, #2a5aaa, #1a3a7a);
+  color: #fff; padding: 7px 14px; font-size: 14px; font-weight: 700;
+  letter-spacing: 0.5px; border-bottom: 2px solid #4a7acc;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.hub-patient { font-size: 11px; color: #c8d8f0; font-weight: 400; }
+.hub-body { padding: 16px; }
+.hub-section {
+  font-size: 11px; font-weight: 700; color: #1a3a6e;
+  border-bottom: 1px solid #a0b0cc; padding-bottom: 4px; margin-bottom: 10px;
+}
+.hub-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; font-size: 13px; color: #1a2a4a;
+  cursor: pointer; border-radius: 3px; margin-bottom: 4px;
+  background: #d8e4f0; border: 1px solid #a0b8d0;
+  font-weight: 600; transition: background 0.15s;
+}
+.hub-item:hover { background: #2a5aaa; color: #fff; }
+.hub-item.disabled {
+  color: #888; cursor: not-allowed; background: #c8d0dc; border-color: #b0b8c4;
+}
+.hub-item.disabled:hover { background: #c8d0dc; color: #888; }
+.hub-footer {
+  padding: 10px 16px; border-top: 1px solid #a0b0cc; background: #b8c8e0;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.btn-new-patient {
+  height: 26px; padding: 0 16px; font-size: 12px; font-weight: 700;
+  border: 1px solid #7a9acc; background: #d0ddf0; color: #222;
+  cursor: pointer; font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+}
+.btn-new-patient:hover { background: #bfcce0; }
+.btn-logout {
+  height: 26px; padding: 0 16px; font-size: 12px; font-weight: 700;
+  border: 1px solid #c04040; background: #f0d0d0; color: #800;
+  cursor: pointer; font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+}
+.btn-logout:hover { background: #e0b0b0; }
+</style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+<div class="page-title">ADVANCED MRI SIMULATOR</div>
+
+<!-- MODAL CADASTRO PACIENTE -->
+<div id="modal-new-exam">
+  <div class="ne-modal-box">
+    <div class="ne-titlebar">New Examination</div>
+    <div class="ne-body">
+      <div class="ne-col ne-col-left">
+        <div class="ne-section-title">Patient</div>
+        <div class="ne-grid">
+          <label class="ne-label">Patient name:</label>
+          <input class="ne-input" id="ne-name" type="text">
+          <label class="ne-label">Registration ID:</label>
+          <input class="ne-input" id="ne-regid" type="text">
+          <label class="ne-label">Date of birth:</label>
+          <div class="ne-row-inline">
+            <input class="ne-input" id="ne-dob" type="text" placeholder="dd-mm-yyyy" style="width:110px;">
+            <span style="font-size:11px;color:#555;">dd-mm-yyyy</span>
+          </div>
+          <label class="ne-label">Age:</label>
+          <div class="ne-row-inline">
+            <input class="ne-input" id="ne-age" type="number" min="0" max="120" style="width:60px;">
+            <select style="height:22px;border:1px solid #7a9acc;background:#e8f0ff;font-size:12px;padding:0 4px;">
+              <option>Years</option><option>Months</option>
+            </select>
+          </div>
+          <label class="ne-label">Gender:</label>
+          <div class="ne-row-inline">
+            <button class="ne-toggle" data-group="gender" data-val="Male">Male</button>
+            <button class="ne-toggle active-ne" data-group="gender" data-val="Female">Female</button>
+            <button class="ne-toggle" data-group="gender" data-val="Phantom">Phantom</button>
+          </div>
+          <label class="ne-label">Patient weight:</label>
+          <div class="ne-row-inline">
+            <input class="ne-input" id="ne-weight" type="number" min="0" style="width:70px;">
+            <span style="font-size:12px;">kg</span>
+          </div>
+        </div>
+        <div class="ne-conditions-title">Patient conditions</div>
+        <div class="ne-grid">
+          <label class="ne-label">Pregnant</label>
+          <div class="ne-row-inline">
+            <button class="ne-toggle" data-group="pregnant" data-val="Yes">Yes</button>
+            <button class="ne-toggle active-ne" data-group="pregnant" data-val="No">No</button>
+            <button class="ne-toggle" data-group="pregnant" data-val="Possibly">Possibly</button>
+          </div>
+          <label class="ne-label">Implant</label>
+          <div class="ne-row-inline">
+            <button class="ne-toggle" data-group="implant" data-val="Yes">Yes</button>
+            <button class="ne-toggle active-ne" data-group="implant" data-val="No">No</button>
+          </div>
+          <label class="ne-label">Medical alerts:</label>
+          <input class="ne-input" id="ne-alerts" type="text">
+          <label class="ne-label">Allergies:</label>
+          <input class="ne-input" id="ne-allergies" type="text">
+        </div>
+      </div>
+      <div class="ne-col">
+        <div class="ne-section-title">Examination</div>
+        <div class="ne-grid">
+          <label class="ne-label">Exam name:</label>
+          <input class="ne-input" id="ne-examname" type="text">
+          <label class="ne-label">Accession number:</label>
+          <input class="ne-input" id="ne-accession" type="text">
+          <label class="ne-label">Examination date:</label>
+          <div class="ne-date-btns">
+            <button class="ne-date-btn active-ne" id="ne-date-today">Today</button>
+            <button class="ne-date-btn" id="ne-date-tomorrow">Tomorrow</button>
+            <span id="ne-date-display" style="font-size:12px;color:#222;font-weight:700;margin-left:4px;"></span>
+          </div>
+          <label class="ne-label">Referring Physician:</label>
+          <input class="ne-input" id="ne-referring" type="text">
+          <label class="ne-label">Performing Physician:</label>
+          <input class="ne-input" id="ne-performing" type="text">
+          <label class="ne-label">Study Comments:</label>
+          <input class="ne-input" id="ne-comments" type="text">
+          <label class="ne-label">Allowed SAR mode</label>
+          <div class="ne-row-inline">
+            <button class="ne-toggle" data-group="sar" data-val="Normal">Normal</button>
+            <button class="ne-toggle active-ne" data-group="sar" data-val="1st Level">1st Level</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ne-footer">
+      <button class="ne-btn ne-btn-ok" id="ne-btn-ok">OK</button>
+      <button class="ne-btn ne-btn-cancel" id="ne-btn-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- HUB DE PROTOCOLOS -->
+<div class="hub-box" id="hub-box" style="display:none;">
+  <div class="hub-titlebar">
+    <span>Selecione o Protocolo</span>
+    <span class="hub-patient" id="hub-patient-name"></span>
+  </div>
+  <div class="hub-body">
+    <div class="hub-section">📂 Neuro</div>
+    <div class="hub-item" id="proto-cranio">📄 Crânio</div>
+    <div class="hub-item disabled">📄 ATM</div>
+    <div class="hub-item disabled">📄 Crânio / Angio</div>
+    <div class="hub-item disabled">📄 Hipófise</div>
+
+    <div class="hub-section" style="margin-top:12px;">📂 Colunas</div>
+    <div class="hub-item disabled">📄 Em breve</div>
+
+    <div class="hub-section" style="margin-top:12px;">📂 Abd / Pelve</div>
+    <div class="hub-item disabled">📄 Em breve</div>
+
+    <div class="hub-section" style="margin-top:12px;">📂 Mamas</div>
+    <div class="hub-item disabled">📄 Em breve</div>
+  </div>
+  <div class="hub-footer">
+    <button class="btn-new-patient" id="btn-new-patient">+ Novo Paciente</button>
+    <button class="btn-logout" id="btn-logout">Sair</button>
+  </div>
+</div>
+
+<script>
+// Verifica autenticação
+if (sessionStorage.getItem('mri_auth') !== 'true') {
+  window.location.href = 'login.html';
+}
+
+// Datas
+function getFormattedDate(offset) {
+  const d = new Date(); d.setDate(d.getDate() + offset);
+  return String(d.getDate()).padStart(2,'0') + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + d.getFullYear();
+}
+const todayStr = getFormattedDate(0);
+const tomorrowStr = getFormattedDate(1);
+document.getElementById('ne-date-display').textContent = todayStr;
+let selectedDate = todayStr;
+
+document.getElementById('ne-date-today').addEventListener('click', function() {
+  document.querySelectorAll('.ne-date-btn').forEach(b => b.classList.remove('active-ne'));
+  this.classList.add('active-ne'); selectedDate = todayStr;
+  document.getElementById('ne-date-display').textContent = todayStr;
+});
+document.getElementById('ne-date-tomorrow').addEventListener('click', function() {
+  document.querySelectorAll('.ne-date-btn').forEach(b => b.classList.remove('active-ne'));
+  this.classList.add('active-ne'); selectedDate = tomorrowStr;
+  document.getElementById('ne-date-display').textContent = tomorrowStr;
+});
+
+// Toggles
+document.querySelectorAll('.ne-toggle').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const group = this.dataset.group;
+    document.querySelectorAll(`.ne-toggle[data-group="${group}"]`).forEach(b => b.classList.remove('active-ne'));
+    this.classList.add('active-ne');
+  });
+});
+
+function abrirCadastro() {
+  document.getElementById('hub-box').style.display = 'none';
+  document.getElementById('modal-new-exam').classList.add('open');
+}
+
+// Se já tem paciente salvo, mostra hub direto
+const dadosSalvos = sessionStorage.getItem('mri_paciente');
+if (dadosSalvos) {
+  const p = JSON.parse(dadosSalvos);
+  document.getElementById('hub-box').style.display = 'block';
+  document.getElementById('hub-patient-name').textContent = p.name || 'Paciente';
+} else {
+  abrirCadastro();
+}
+
+// OK — salva paciente e mostra hub
+document.getElementById('ne-btn-ok').addEventListener('click', function() {
+  const name      = document.getElementById('ne-name').value.trim();
+  const regid     = document.getElementById('ne-regid').value.trim();
+  const dob       = document.getElementById('ne-dob').value.trim();
+  const age       = document.getElementById('ne-age').value.trim();
+  const weight    = document.getElementById('ne-weight').value.trim();
+  const gender    = (document.querySelector('.ne-toggle[data-group="gender"].active-ne') || {}).dataset?.val || '';
+  const examname  = document.getElementById('ne-examname').value.trim();
+  const accession = document.getElementById('ne-accession').value.trim();
+  const referring = document.getElementById('ne-referring').value.trim();
+  const performing= document.getElementById('ne-performing').value.trim();
+  const comments  = document.getElementById('ne-comments').value.trim();
+  const pregnant  = (document.querySelector('.ne-toggle[data-group="pregnant"].active-ne') || {}).dataset?.val || '';
+  const implant   = (document.querySelector('.ne-toggle[data-group="implant"].active-ne') || {}).dataset?.val || '';
+  const alerts    = document.getElementById('ne-alerts').value.trim();
+  const allergies = document.getElementById('ne-allergies').value.trim();
+
+  const paciente = { name, regid, dob, age, weight, gender, examname, accession,
+    referring, performing, comments, pregnant, implant, alerts, allergies, examDate: selectedDate };
+  sessionStorage.setItem('mri_paciente', JSON.stringify(paciente));
+
+  document.getElementById('modal-new-exam').classList.remove('open');
+  document.getElementById('hub-box').style.display = 'block';
+  document.getElementById('hub-patient-name').textContent = name || 'Paciente';
+});
+
+// Cancel
+document.getElementById('ne-btn-cancel').addEventListener('click', function() {
+  if (sessionStorage.getItem('mri_paciente')) {
+    document.getElementById('modal-new-exam').classList.remove('open');
+    document.getElementById('hub-box').style.display = 'block';
+  }
+});
+
+// Novo paciente
+document.getElementById('btn-new-patient').addEventListener('click', abrirCadastro);
+
+// Sair
+document.getElementById('btn-logout').addEventListener('click', function() {
+  sessionStorage.clear();
+  window.location.href = 'login.html';
+});
+
+// Crânio
+document.getElementById('proto-cranio').addEventListener('click', function() {
+  sessionStorage.setItem('mri_protocolo', 'cranio');
+  window.location.href = 'cranio.html';
+});
+</script>
+</body>
+</html>
