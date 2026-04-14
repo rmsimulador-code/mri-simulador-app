@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced MRI Simulator — Login</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+  background: #1a4a8a; min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative;
+}
+.login-bg-pattern {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 50% 40%, rgba(100,160,255,0.18) 0%, transparent 60%),
+    repeating-linear-gradient(45deg, transparent, transparent 38px, rgba(255,255,255,0.03) 38px, rgba(255,255,255,0.03) 40px);
+  pointer-events: none; z-index: 0;
+}
+.login-title {
+  font-size: 36px; font-weight: 900; color: #a8c8ff; letter-spacing: 5px;
+  text-transform: uppercase; text-shadow: 0 2px 24px rgba(0,80,200,0.5);
+  margin-bottom: 28px; position: relative; z-index: 1; user-select: none;
+}
+.login-box {
+  background: linear-gradient(160deg, #e8e4f0 0%, #d8d2e0 100%);
+  border: 1px solid #c0b8cc; border-radius: 2px;
+  box-shadow: 0 8px 40px rgba(0,0,20,0.45), inset 0 1px 0 rgba(255,255,255,0.6);
+  width: 380px; position: relative; z-index: 1; overflow: hidden;
+}
+.login-box-header {
+  background: linear-gradient(to bottom, #3a6cc0, #1e4a8a); color: #fff;
+  text-align: center; padding: 9px 0 7px; font-size: 14px; font-weight: 700;
+  letter-spacing: 0.5px; border-bottom: 2px solid #1a3a70;
+}
+.login-box-version {
+  background: #f0ecf6; border-bottom: 1px solid #ccc8d4;
+  text-align: center; padding: 14px 20px 6px; font-size: 13px; font-weight: 700; color: #333;
+}
+.login-box-corp {
+  font-size: 10px; color: #555; text-align: center;
+  padding: 4px 20px 10px; line-height: 1.5;
+  border-bottom: 1px solid #ccc8d4; background: #f0ecf6;
+}
+.login-logon-label {
+  text-align: center; font-size: 13px; font-weight: 600; color: #333;
+  padding: 14px 0 8px; background: #e8e4f0;
+}
+.login-fields {
+  padding: 6px 30px 14px; background: #e8e4f0;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.login-field-row { display: flex; align-items: center; gap: 12px; }
+.login-label { width: 72px; text-align: right; font-size: 13px; color: #333; flex-shrink: 0; }
+.login-input {
+  flex: 1; height: 26px; border: 1px solid #9ba8c0; border-radius: 1px;
+  background: linear-gradient(to bottom, #dfe8f8, #ccd6ee);
+  padding: 0 8px; font-size: 13px; color: #222; outline: none;
+  box-shadow: inset 0 1px 3px rgba(0,0,80,0.15);
+}
+.login-input:focus { border-color: #3a6cc0; background: linear-gradient(to bottom, #e8f0ff, #d4e0f8); }
+.login-error-msg {
+  display: none; color: #ff4444; font-size: 12px; font-weight: 700;
+  text-align: center; padding: 6px 0 2px; background: #e8e4f0;
+}
+.login-buttons {
+  display: flex; justify-content: center; gap: 16px;
+  padding: 12px 0 16px; background: #e0dbe8; border-top: 1px solid #ccc8d4;
+}
+.login-btn {
+  width: 90px; height: 26px;
+  background: linear-gradient(to bottom, #e8e4f0, #d4cedd);
+  border: 1px solid #9993a5; border-radius: 2px; font-size: 13px; color: #222;
+  cursor: pointer; font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif; transition: background 0.15s;
+}
+.login-btn:hover { background: linear-gradient(to bottom, #f0ecf8, #e0daea); }
+.login-btn:active { background: linear-gradient(to bottom, #d0ccd8, #c8c2d0); transform: translateY(1px); }
+.login-footer {
+  margin-top: 20px; font-size: 10px; color: rgba(180,210,255,0.6);
+  text-align: center; line-height: 1.6; position: relative; z-index: 1; max-width: 560px;
+}
+.login-corner-btns {
+  position: fixed; bottom: 16px; right: 20px; display: flex; gap: 6px; z-index: 1;
+}
+.login-corner-btn {
+  height: 24px; padding: 0 14px;
+  background: linear-gradient(to bottom, #e8e4f0, #d4cedd);
+  border: 1px solid #9993a5; border-radius: 2px; font-size: 12px; color: #222;
+  cursor: pointer; font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+}
+.login-corner-btn:hover { background: linear-gradient(to bottom, #f0ecf8, #e0daea); }
+</style>
+</head>
+<body>
+
+<div class="login-bg-pattern"></div>
+<div class="login-title">ADVANCED MRI SIMULATOR</div>
+
+<div class="login-box">
+  <div class="login-box-header">Advanced MRI Simulator</div>
+  <div class="login-box-version"><div>BETA (04-04-2026)</div></div>
+  <div class="login-box-corp">
+    Advanced MRI Simulator &mdash; Educational Platform<br>
+    For training and simulation purposes only.
+  </div>
+  <div class="login-logon-label">Logon</div>
+  <div class="login-fields">
+    <div class="login-field-row">
+      <label class="login-label">Name</label>
+      <input class="login-input" id="login-name" type="text">
+    </div>
+    <div class="login-field-row">
+      <label class="login-label">Password</label>
+      <input class="login-input" id="login-pass" type="password">
+    </div>
+  </div>
+  <div class="login-error-msg" id="login-error-msg">Usuário ou senha incorretos.</div>
+  <div class="login-buttons">
+    <button class="login-btn" id="btn-login-ok">OK</button>
+    <button class="login-btn" id="btn-login-cancel">Cancel</button>
+  </div>
+</div>
+
+<div class="login-footer">
+  &copy; Advanced MRI Simulator. All rights reserved.<br>
+  Reproduction or transmission in any form is prohibited without prior written consent.<br>
+  For simulation and educational use only.
+</div>
+
+<div class="login-corner-btns">
+  <button class="login-corner-btn">Shutdown</button>
+  <button class="login-corner-btn">Restart</button>
+</div>
+
+<script>
+// Se já autenticado, vai direto para paciente
+if (sessionStorage.getItem('mri_auth') === 'true') {
+  window.location.href = 'simulador.html';
+}
+
+document.getElementById('btn-login-ok').addEventListener('click', function() {
+  const nameVal = document.getElementById('login-name').value;
+  const passVal = document.getElementById('login-pass').value;
+  const errMsg  = document.getElementById('login-error-msg');
+  if (nameVal === 'mriuser' && passVal === 'ArrudaIuras@MRI') {
+    errMsg.style.display = 'none';
+    sessionStorage.setItem('mri_auth', 'true');
+    sessionStorage.setItem('mri_user', nameVal);
+    window.location.href = 'simulador.html';
+  } else {
+    errMsg.style.display = 'block';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+  }
+});
+
+document.getElementById('btn-login-cancel').addEventListener('click', function() {
+  document.getElementById('login-name').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error-msg').style.display = 'none';
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('btn-login-ok').click();
+});
+</script>
+</body>
+</html>
